@@ -29,7 +29,7 @@ namespace UsabilityDynamics\PageSpeed {
 			 * @property $version
 			 * @type {Object}
 			 */
-			public static $version = '0.1.0';
+			public static $version = '0.2.0';
 
 			/**
 			 * Textdomain String
@@ -125,7 +125,7 @@ namespace UsabilityDynamics\PageSpeed {
 			public function plugins_loaded() {
 
 				add_action( 'template_redirect', array( $this, 'template_redirect' ) );
-				// add_action( 'admin_init', array( $this, 'admin_init' ) );
+				add_action( 'admin_init', array( $this, 'admin_init' ) );
 
 			}
 
@@ -133,6 +133,7 @@ namespace UsabilityDynamics\PageSpeed {
 				echo '<p>Intro text for our settings section</p>';
 
 			}
+			
 			public function setting_section_callback_function() {
 				echo '<label><input name="core.enabled" type="checkbox" value="1" class="code" ' . checked( 1, get_option( 'core.enabled' ), false ) . ' /> Explanation text</label>';
 			}
@@ -149,6 +150,8 @@ namespace UsabilityDynamics\PageSpeed {
 
 				add_settings_field( 'core.enabled', __( 'Enabled', 'wp-pagespeed' ), array( $this, 'setting_callback_function' ), 'reading', 'wp-pagespeed-section' );
 
+				$this->send_headers();
+
 			}
 
 			/**
@@ -156,21 +159,52 @@ namespace UsabilityDynamics\PageSpeed {
 			 */
 			public function template_redirect() {
 
+				ob_start( array( $this, 'ob_start' ) );
+
+				$this->send_headers();
+
+			}
+
+			/**
+			 * Write Response headers.
+			 *
+			 * @uahot potanin@UD
+			 */
+			public function send_headers() {
+
 				if( headers_sent() ) {
 					return;
 				}
 
-				ob_start( array( $this, 'ob_start' ) );
+				$_filters = apply_filters( 'wp_pagespeed:filters', [
+					'recompress_images',
+					'rewrite_javascript',
+					'combine_javascript',
+					'outline_javascript',
+					'rewrite_css',
+					'combine_css',
+					'inline_google_font_css',
+					'rewrite_domains',
+					'rewrite_images',
+					'resize_images',
+					'lazyload_images',
+					'collapse_whitespace',
+					'inline_javascript',
+					'remove_comments',
+					'resize_rendered_image_dimensions'
+				], $this );
 
 				if( defined( 'WP_PAGESPEED' ) && !WP_PAGESPEED ) {
 					header( 'PageSpeed: off' );
 				}
 
+				// Apply default filters.
 				if( defined( 'WP_PAGESPEED' ) && is_bool( WP_PAGESPEED ) ) {
 					header( 'PageSpeed: on' );
-					header( 'PageSpeedFilters:inline_images,remove_comments,recompress_images,minify_html,lazyload_images,-inline_images' );
+					header( 'PageSpeedFilters:' . join( ',', $_filters ) );
 				}
 
+				// Use filters defined in constant.
 				if( defined( 'WP_PAGESPEED' ) && is_string( WP_PAGESPEED ) ) {
 					header( 'PageSpeed: on' );
 					header( 'PageSpeedFilters:' . WP_PAGESPEED );
@@ -178,6 +212,7 @@ namespace UsabilityDynamics\PageSpeed {
 
 				if( $this->get( 'core.enabled', false ) ) {
 					header( 'PageSpeed: on' );
+					header( 'PageSpeedFilters:' . join( ',', $_filters ) );
 				}
 
 			}

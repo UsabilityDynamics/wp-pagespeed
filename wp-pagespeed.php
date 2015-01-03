@@ -4,7 +4,7 @@
  * Plugin URI: http://usabilitydynamics.com/plugins/wp-pagespeed
  * Description: Handle Google's PageSpeed middleware.
  * Author: Usability Dynamics, Inc.
- * Version: 0.1.1
+ * Version: 0.2.0
  * Author URI: http://usabilitydynamics.com
  * Network: True
  * GitHub Plugin URI: UsabilityDynamics/wp-pagespeed
